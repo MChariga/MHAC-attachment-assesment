@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Manor House Assessment Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: letterhead band, tab bar, then one working surface; the student report is laid out like the paper form's printed sheet. */
+:root{
+  --bg:#F4F7F3; --surface:#FFFFFF; --ink:#15251B; --muted:#58695D; --line:#DCE5DC;
+  --brand:#2E7D32; --brand-deep:#1E5A27; --brand-wash:#E6F1E4;
+  --poor:#B23A2C; --poor-wash:#F8E4E0; --good:#B7791F; --good-wash:#FBF0D9; --vg:#1E6B2F; --vg-wash:#DDEFD9; --na:#8A978D;
+  --display:'Palatino Linotype',Palatino,'Book Antiqua','URW Palladio L',P052,serif;
+  --body:'Source Sans 3',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1812; --surface:#17231B; --ink:#E7F0E8; --muted:#9DB0A2; --line:#2A3B2F;
+  --brand:#6FBF73; --brand-deep:#8FD494; --brand-wash:#1D3323;
+  --poor:#E58A7C; --poor-wash:#3A1F1B; --good:#E3B25A; --good-wash:#38290F; --vg:#7ED38B; --vg-wash:#1B3A22; --na:#7C8B80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1812; --surface:#17231B; --ink:#E7F0E8; --muted:#9DB0A2; --line:#2A3B2F;
+  --brand:#6FBF73; --brand-deep:#8FD494; --brand-wash:#1D3323;
+  --poor:#E58A7C; --poor-wash:#3A1F1B; --good:#E3B25A; --good-wash:#38290F; --vg:#7ED38B; --vg-wash:#1B3A22; --na:#7C8B80; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;letter-spacing:.005em}
+button{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:16px;padding-block:20px 14px;flex-wrap:wrap}
+.top img{height:52px;width:auto;display:block}
+.top .ttl{min-width:0;flex:1 1 260px}
+.top h1{font-size:25px;color:var(--brand-deep)}
+.top p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;overflow-x:auto}
+nav button{background:none;border:0;padding:12px 16px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--brand-deep);border-bottom-color:var(--brand)}
+nav button:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,tr[data-open]:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+main{padding-top:22px;display:grid;gap:26px}
+.stats{display:flex;flex-wrap:wrap;gap:10px 36px;padding-bottom:4px}
+.stat{min-width:0}
+.stat b{display:block;font-family:var(--display);font-size:28px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--brand-deep)}
+.stat span{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat em{font-style:normal;font-size:15px;color:var(--muted)}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.sec-h h2{font-size:20px}
+.sec-h small{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr[data-open]{cursor:pointer}
+tr[data-open]:hover td{background:var(--brand-wash)}
+td.name b{font-weight:600}
+td.name small{display:block;color:var(--muted)}
+.muted{color:var(--muted)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.p-poor{background:var(--poor-wash);color:var(--poor)}
+.p-good{background:var(--good-wash);color:var(--good)}
+.p-very_good{background:var(--vg-wash);color:var(--vg)}
+.p-na{background:var(--line);color:var(--muted)}
+.bar{position:relative;height:10px;border-radius:5px;background:var(--line);min-width:90px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:5px;display:block}
+.bar u{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted);opacity:.45}
+.f-poor{background:var(--poor)}.f-good{background:var(--good)}.f-very_good{background:var(--vg)}
+.scorecell{display:flex;align-items:center;gap:10px;min-width:260px}
+.scorecell .bar{flex:1}
+.scorecell b{font-weight:700;min-width:4.6em;text-align:right;white-space:nowrap}
+.scorecell .pc{min-width:3.6em;font-size:13px}
+.heat th,.heat td{text-align:center;padding:8px 6px}
+.heat th:first-child,.heat td:first-child{text-align:left;padding-left:12px;white-space:nowrap}
+.hc{display:block;border-radius:5px;padding:5px 0;font-weight:600;font-size:13.5px;min-width:52px}
+.hc.poor{background:var(--poor-wash);color:var(--poor)}.hc.good{background:var(--good-wash);color:var(--good)}.hc.very_good{background:var(--vg-wash);color:var(--vg)}.hc.none{color:var(--na);font-weight:400}
+.cohort{display:grid;gap:10px;padding:16px}
+.crow{display:grid;grid-template-columns:minmax(110px,170px) 1fr 44px;gap:12px;align-items:center}
+.crow span:last-child{font-weight:700;text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:13px;margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--c)}
+.empty{padding:34px 22px;text-align:center}
+.empty h3{font-size:20px;margin-bottom:6px}
+.empty p{margin:0 auto 14px;max-width:46ch;color:var(--muted)}
+.btn{background:var(--brand);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer}
+html[data-theme="dark"] .btn{color:#0F1812}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn{color:#0F1812}}
+.btn.ghost{background:transparent;color:var(--brand-deep);border:1px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:default}
+select,input[type=file]{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;max-width:100%}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar select{flex:1 1 240px;min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+html[data-theme="dark"] .chip[aria-pressed="true"]{color:#0F1812}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0F1812}}
+/* report sheet */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:26px clamp(16px,4vw,38px) 30px;display:grid;gap:26px}
+.lh{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;border-bottom:2px solid var(--brand);padding-bottom:14px}
+.lh .addr{font-family:var(--display);font-size:13.5px;line-height:1.5;color:var(--muted)}
+.lh .addr b{display:block;font-size:17px;font-weight:600;color:var(--brand-deep)}
+.lh img{height:56px;width:auto}
+.rt{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-deep);margin:0 0 4px}
+.sheet h1{font-size:30px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 24px;margin:14px 0 0}
+.meta div{min-width:0}
+.meta dt{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.meta dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.overall{display:grid;grid-template-columns:auto 1fr;gap:12px 30px;align-items:center}
+.big{font-family:var(--display);font-size:60px;line-height:1;font-weight:600;color:var(--brand-deep);font-variant-numeric:tabular-nums}
+.big small{font-size:22px;color:var(--muted);font-weight:400}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+.stack i{display:block}
+.sub{color:var(--muted);font-size:13.5px;margin-top:8px;display:flex;gap:6px 18px;flex-wrap:wrap}
+.sub b{color:var(--ink)}
+.sheet h2{font-size:19px;color:var(--brand-deep);margin-bottom:10px}
+.secrow{display:grid;grid-template-columns:minmax(120px,210px) 1fr auto;gap:6px 14px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--line)}
+.secrow:last-child{border-bottom:0}
+.secrow b{font-variant-numeric:tabular-nums;min-width:2.4em;text-align:right}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
+.list{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.list li{padding-left:16px;position:relative;font-size:14.5px}
+.list li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border-radius:50%;background:var(--c,var(--brand))}
+.list.s li{--c:var(--vg)}.list.w li{--c:var(--poor)}
+details.dt{border-top:1px solid var(--line);padding:10px 0}
+details.dt summary{cursor:pointer;font-weight:600;display:flex;justify-content:space-between;gap:10px}
+.items{display:grid;gap:0;margin-top:8px}
+.item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:6px 0;border-bottom:1px dotted var(--line);font-size:14.5px}
+.item span:first-child{font-style:italic}
+.note{border-left:3px solid var(--brand);padding:6px 0 6px 12px;margin:0 0 8px;font-size:14.5px}
+.note small{display:block;color:var(--muted)}
+.sign{display:flex;gap:10px 36px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.sign b{color:var(--ink)}
+.msg{padding:10px 14px;border-radius:6px;background:var(--brand-wash);color:var(--brand-deep);font-weight:600;margin-top:12px}
+.msg.err{background:var(--poor-wash);color:var(--poor)}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px}
+.imp{padding:18px;display:grid;gap:12px}
+.imp code{background:var(--brand-wash);padding:1px 6px;border-radius:4px;font-size:13px}
+@media (max-width:560px){
+  .top h1{font-size:21px}.big{font-size:48px}.overall{grid-template-columns:1fr}
+  .secrow{grid-template-columns:1fr auto}.secrow .bar{grid-column:1/-1;order:3}
+  .crow{grid-template-columns:90px 1fr 38px}
+}
+@media (prefers-reduced-motion:no-preference){.bar i,.stack i{transition:width .5s ease}}
+
+.dist{display:block;width:100%;height:auto;overflow:visible}
+.dist text{font-family:var(--body);font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.dist .zone-poor{fill:var(--poor);opacity:.07}.dist .zone-good{fill:var(--good);opacity:.07}.dist .zone-vg{fill:var(--vg);opacity:.07}
+.dist .grid{stroke:var(--line);stroke-width:1}
+.dist .axis{stroke:var(--muted);stroke-width:1;opacity:.6}
+.dist .b-poor{fill:var(--poor)}.dist .b-good{fill:var(--good)}.dist .b-very_good{fill:var(--vg)}
+.dist .bar-r{opacity:.78}
+.dist .curve{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.dist .mean{stroke:var(--brand-deep);stroke-width:1.5;stroke-dasharray:5 4}
+.dist .you{stroke:var(--ink);stroke-width:2}
+.dist .you-dot{fill:var(--surface);stroke:var(--ink);stroke-width:2.5}
+.dist .tag{font-weight:700;fill:var(--ink);font-size:12px}
+.dist .zl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase}
+.distwrap{padding:14px 14px 8px}
+.dlegend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:13px;padding:0 4px 6px}
+.dlegend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.dlegend .sw{width:11px;height:11px;border-radius:3px}
+.dlegend .ln{width:20px;height:0;border-top:2.2px solid var(--ink)}
+.dlegend .dsh{width:20px;height:0;border-top:2px dashed var(--brand-deep)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+@media (max-width:560px){.dist text{font-size:19px}.dist .tag{font-size:21px}.dist .zl{display:none}}
+</style>
+</head><body>
+<div class="wrap">
+  <header class="top">
+    <img src="data:image/png;base64,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" alt="Manor House Agricultural Centre">
+    <div class="ttl"><h1>Attachment Assessment Dashboard</h1><p>Certificate in Agroecology (Apprenticeship) · 2026 A class</p></div>
+  </header>
+  <nav role="tablist" aria-label="Dashboard sections">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="report" aria-selected="false">Student report</button>
+    <button role="tab" data-tab="import" aria-selected="false">Data source</button>
+  </nav>
+  <main id="app" aria-live="polite"></main>
+</div>
+
+<script src="data/entries.js"></script>
+<script>
+const SECTIONS = [{"id": "soil", "title": "Soil health", "items": ["Keep soil covered with plant or mulch", "Practice contour planting on steep land", "Control water surface runoff where erosion is high", "Composting plant and animal manure", "Student has identified the soil in his area (soil profile)", "Capture and use livestock urine in composting and residue management", "Manage compost quality", "Recycling of farm and kitchen residue", "Make bokashi", "Made liquid manure (manure tea, tithonia tea etc)", "Manage striga using residue-based intervention"]}, {"id": "pest", "title": "Pest management", "items": ["Do the crops look healthy", "Disposal of infested plants (sanitary field condition in composting area)", "Use of plant residue for composting", "Crop diversification, intercropping and companion planting", "Have they planted tephrosia, aloe vera etc. in their farm", "Use of push and pull technologies (extra points)", "Planting of flowers to attract beneficial insects", "Use of Tephrosia, ash brew, chili etc to manage and control pest"]}, {"id": "lvst", "title": "Livestock", "items": ["Considers provision of animal nutritional needs in farm planning - Fodder crops, trees, pastures, cereals, tubers, and farm by-products", "Has planted resilient grasses, pasture, and legumes based on the Agroecological zone", "Makes fermented livestock feeds following GO, GROW, GLOW needs", "Has planned and conserved fodder for the livestock for use during the dry season. Made silage, hay, and standing forage in the field (Brachiaria, Panicum maximum, stover)", "Understands animal welfare principles and is visible on the farm", "Hygiene and comfort in the livestock living areas (is the place clean?)", "Proactive internal and external parasite control - Use of botanical remedies i.e. Tephrosia powder, aloe vera, papaya leaves, chili, ginger, turmeric", "Follow biosecurity strategies - footbaths, fencing of livestock units", "Proper feeding and mineral supplementation of livestock", "Provide clean water to the livestock throughout"]}, {"id": "nutr", "title": "Family nutrition", "items": ["Consider provision of family nutritional needs in farm planning", "Have they grown any alternative crops in their garden", "Grows diverse vegetables in the farm", "Grow diverse carbohydrate plants in the farm (maize, sweet potatoes, cassava, bananas etc)", "Grow diverse protein crops in the farm (soya, beans, lablab etc)", "Grow and manage fruit trees in the homestead", "Initiative of starting small livestock projects (rabbits, poultry, guinea pigs) to manage family nutrition", "Produced crops for income generation", "Added value to surplus farm produce if any", "Method of storage and packaging of value added product if any", "Sold any value added product if any"]}, {"id": "agro", "title": "Agroforestry and food forest", "items": ["Started a small tree nursery at home", "Planted agroforestry trees in the farm (diverse trees)", "Manage trees in the farm", "Managed a tree nursery at home", "Harvested and propagated seed at home", "Practiced vegetative propagation of tree at home", "Planted herbs, spices and medicinal plants e.g. aloe vera, mints etc"]}, {"id": "tech", "title": "Appropriate technologies", "items": ["Use of locally available resources to solve immediate challenges", "Implemented small gardening technologies (raised beds, bag gardens, mandala gardens etc)", "Involved neighbours in their work and neighbours have started adopting agroecology", "Irrigation methods used"]}, {"id": "clim", "title": "Climate change strategies", "items": ["Water harvesting strategies in the farm (micro catchment e.g. zai pits, sunken beds)", "Grown resilient crops (drought tolerant)"]}, {"id": "watr", "title": "Water management", "items": ["Dug directional channels", "Dug banana circles", "Planted diverse food in swales, bunds", "Demonstrated slowing, sinking, and spreading water"]}];
+let ROSTER = [];  // filled from the data (meta.roster); never stored in this public file
+const ASSESSORS = {kelvin_kenbun:"Kelvin Kenbun",denis_mbori:"Denis Mbori",andrew_simotwo:"Andrew Simotwo"};
+const SHORT = {soil:"Soil health",pest:"Pest management",lvst:"Livestock",nutr:"Family nutrition",agro:"Agroforestry",tech:"Technologies",clim:"Climate",watr:"Water"};
+/* Marking: Poor (0-2) = 1 mark, Good (3-4) = 2 marks, Very Good (5-6) = 3 marks. "Not applicable" items are left out of
+   both the marks scored and the marks possible, so nobody is penalised for them. */
+const PTS = {poor:1, good:2, very_good:3};
+const MAXPT = 3;
+const BAND_GOOD = 50, BAND_VG = 250/3;   // level cut-offs as a % of marks possible (average of 1.5 and 2.5 marks per item)
+const BANDLBL = {poor:"Poor", good:"Good", very_good:"Very Good", na:"Not applicable"};
+const LEGEND = {poor:"0-2 Poor", good:"3-4 Good", very_good:"5-6 Very Good"};
+const state = {dsec:"overall", tab:"overview", entries:[], sel:null, entryId:null, canWrite:true, msg:null, loaded:false, db:null};
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => n==null ? "–" : (Math.round(n*10)/10).toFixed(1);
+const bandOf = s => s==null ? "none" : s>=BAND_VG-1e-9 ? "very_good" : s>=BAND_GOOD-1e-9 ? "good" : "poor";
+const pct = s => Math.max(0, Math.min(100, s));   // a score is already a percentage of marks possible
+const fp = n => n==null ? "–" : fmt(n)+"%";
+const marks = (g,m) => m ? `${g} / ${m}` : "–";
+const rosterName = reg => (ROSTER.find(r=>r.reg===reg)||{}).name || "";
+const dateKey = e => (e.date||e.submitted||"");
+
+function secMarks(e, sec){
+  let got=0, max=0;
+  sec.items.forEach((_,i)=>{ const b=e.r[sec.id+"_"+String(i+1).padStart(2,"0")]; if(PTS[b]){ got+=PTS[b]; max+=MAXPT; } });
+  return {got, max, score: max ? got*100/max : null};
+}
+function summarize(e){
+  const counts = {poor:0,good:0,very_good:0,na:0}; let got=0, max=0;
+  const secs = SECTIONS.map(sec=>{
+    sec.items.forEach((_,i)=>{ const b=e.r[sec.id+"_"+String(i+1).padStart(2,"0")]; if(b in counts) counts[b]++; });
+    const m = secMarks(e,sec); got+=m.got; max+=m.max;
+    return Object.assign({id:sec.id}, m);
+  });
+  return {counts, overall: max ? got*100/max : null, got, max, secs};
+}
+function latestFor(reg){
+  return state.entries.filter(e=>e.reg===reg).sort((a,b)=>dateKey(b).localeCompare(dateKey(a)))[0] || null;
+}
+
+
+/* ---------- distribution ---------- */
+function valuesFor(which){
+  return ROSTER.map(r=>{ const e=latestFor(r.reg); if(!e) return null; const s=summarize(e); return which==="overall"?s.overall:(s.secs.find(z=>z.id===which)||{}).score; }).filter(v=>v!=null);
+}
+function distChart(vals, you){
+  const W=640,H=270,L=34,R=12,T=26,B=40, pw=W-L-R, ph=H-T-B, bw=10, nb=10;
+  const bins=Array(nb).fill(0); vals.forEach(v=>{ bins[Math.min(nb-1,Math.floor(v/bw))]++; });
+  const n=vals.length, h=9;
+  const dens = x => vals.reduce((a,v)=>a+Math.exp(-0.5*((x-v)/h)**2),0)/(h*Math.sqrt(2*Math.PI)) * bw;
+  const pts=[]; for(let x=0;x<=100.001;x+=1) pts.push([x,dens(x)]);
+  const ymax = Math.max(3, Math.ceil(Math.max(Math.max(...bins)+0.6, ...pts.map(p=>p[1]))));
+  const X=x=>L+x/100*pw, Y=y=>T+ph-(y/ymax)*ph;
+  let g=`<rect class="zone-poor" x="${X(0)}" y="${T}" width="${X(BAND_GOOD)-X(0)}" height="${ph}"/><rect class="zone-good" x="${X(BAND_GOOD)}" y="${T}" width="${X(BAND_VG)-X(BAND_GOOD)}" height="${ph}"/><rect class="zone-vg" x="${X(BAND_VG)}" y="${T}" width="${X(100)-X(BAND_VG)}" height="${ph}"/>`;
+  g+=`<text class="zl" x="${(X(0)+X(BAND_GOOD))/2}" y="${T-9}" text-anchor="middle">Poor</text><text class="zl" x="${(X(BAND_GOOD)+X(BAND_VG))/2}" y="${T-9}" text-anchor="middle">Good</text><text class="zl" x="${(X(BAND_VG)+X(100))/2}" y="${T-9}" text-anchor="middle">Very Good</text>`;
+  const step = ymax>8?Math.ceil(ymax/5):1;
+  for(let y=0;y<=ymax;y+=step){ g+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(y)}" y2="${Y(y)}"/><text x="${L-8}" y="${Y(y)+4}" text-anchor="end">${y}</text>`; }
+  bins.forEach((c,i)=>{ if(!c) return; const mid=(i+0.5)*bw, b=bandOf(mid); g+=`<rect class="bar-r b-${b}" x="${X(i*bw)+2}" y="${Y(c)}" width="${pw/nb-4}" height="${Y(0)-Y(c)}" rx="3"><title>${i*bw}% to ${(i+1)*bw}%: ${c} student${c>1?"s":""}</title></rect>`; });
+  g+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  for(let x=0;x<=100;x+=20) g+=`<text x="${X(x)}" y="${Y(0)+16}" text-anchor="middle">${x}%</text>`;
+  g+=`<text x="${L+pw/2}" y="${H-6}" text-anchor="middle">Marks scored as a % of marks possible</text><text x="12" y="${T+ph/2}" text-anchor="middle" transform="rotate(-90 12 ${T+ph/2})">Students</text>`;
+  if(n>1){ g+=`<path class="curve" d="M${pts.map(p=>X(p[0]).toFixed(1)+","+Y(Math.min(p[1],ymax)).toFixed(1)).join(" L")}"/>`; }
+  if(n){ const mean=vals.reduce((a,b)=>a+b,0)/n; g+=`<line class="mean" x1="${X(mean)}" x2="${X(mean)}" y1="${T}" y2="${Y(0)}"/>`; }
+  if(you!=null){ const yy=Math.min(Y(Math.max(dens(you),0.0)), Y(0)-6); g+=`<line class="you" x1="${X(you)}" x2="${X(you)}" y1="${T+12}" y2="${Y(0)}"/><circle class="you-dot" cx="${X(you)}" cy="${Y(0)}" r="6"/><text class="tag" x="${Math.min(Math.max(X(you),L+22),W-R-22)}" y="${T+8}" text-anchor="middle">${esc(fp(you))}</text>`; }
+  return `<svg class="dist" viewBox="0 0 ${W} ${H}" role="img" aria-label="Distribution of student scores">${g}</svg>`;
+}
+function distLegend(you){ return `<div class="dlegend"><span><i class="sw" style="background:var(--vg);opacity:.78"></i>Students per 10% band</span><span><i class="ln"></i>Smoothed distribution</span><span><i class="dsh"></i>Cohort average</span>${you?`<span><i class="sw" style="border:2px solid var(--ink);border-radius:50%;background:var(--surface)"></i>This student</span>`:""}</div>`; }
+function distSection(){
+  const opts=[["overall","Overall score"]].concat(SECTIONS.map(s=>[s.id,s.title]));
+  const vals=valuesFor(state.dsec);
+  const mean=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  const sd=vals.length>1?Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)):null;
+  return `<section><div class="sec-h"><h2>Score distribution</h2><div class="seg"><label for="dsec" class="muted">Show</label><select id="dsec">${opts.map(o=>`<option value="${o[0]}" ${o[0]===state.dsec?"selected":""}>${esc(o[1])}</option>`).join("")}</select></div></div>
+    <div class="panel distwrap">${vals.length?distChart(vals,null)+distLegend(false):`<div class="empty"><p>The distribution appears once students have been assessed.</p></div>`}
+    ${vals.length?`<div class="sub" style="padding:0 4px 8px"><span>Students: <b>${vals.length}</b></span><span>Average: <b>${fp(mean)}</b></span><span>Spread (std. deviation): <b>${sd==null?"–":fmt(sd)+" pts"}</b></span><span>Lowest: <b>${fp(Math.min(...vals))}</b></span><span>Highest: <b>${fp(Math.max(...vals))}</b></span></div>`:""}</div></section>`;
+}
+
+/* ---------- views ---------- */
+function bar(score){
+  const b = bandOf(score);
+  return `<div class="bar" role="img" aria-label="${fp(score)} of marks possible"><i class="f-${b}" style="width:${score==null?0:pct(score)}%"></i><u style="left:${BAND_GOOD}%"></u><u style="left:${BAND_VG}%"></u></div>`;
+}
+function pill(b){ return b==="none" ? `<span class="pill p-na">Not assessed</span>` : `<span class="pill p-${b}">${BANDLBL[b]}</span>`; }
+
+function viewOverview(){
+  const rows = ROSTER.map(r=>{ const e=latestFor(r.reg); return {r, e, s:e?summarize(e):null}; });
+  const done = rows.filter(x=>x.e);
+  const cohortAvg = done.length ? done.reduce((a,x)=>a+(x.s.overall||0),0)/done.length : null;
+  const secAvg = SECTIONS.map(sec=>{ const v=done.map(x=>x.s.secs.find(z=>z.id===sec.id).score).filter(v=>v!=null); return {sec, avg:v.length?v.reduce((a,b)=>a+b,0)/v.length:null}; });
+  const ranked = secAvg.filter(x=>x.avg!=null).sort((a,b)=>b.avg-a.avg);
+  const stats = `<div class="stats">
+    <div class="stat"><b>${done.length}<em> / ${ROSTER.length}</em></b><span>Students assessed</span></div>
+    <div class="stat"><b>${state.entries.length}</b><span>Entries received</span></div>
+    <div class="stat"><b>${fmt(cohortAvg)}<em>%</em></b><span>Cohort average (marks scored)</span></div>
+    <div class="stat"><b style="font-size:20px">${ranked.length?esc(SHORT[ranked[0].sec.id]):"–"}</b><span>Strongest section</span></div>
+    <div class="stat"><b style="font-size:20px">${ranked.length?esc(SHORT[ranked[ranked.length-1].sec.id]):"–"}</b><span>Needs most support</span></div>
+  </div>`;
+  const empty = !state.entries.length ? `<div class="panel empty"><h3>No assessment entries yet</h3><p>Run the data pipeline to bring the KoboToolbox submissions here. Every student's score, section results and report appear as soon as an entry is received.</p><button class="btn" data-tab="import">Data source</button></div>` : "";
+  const table = `<section><div class="sec-h"><h2>Students</h2><small>Latest entry per student. Select a row to open the report.</small></div>
+    <div class="panel scroll"><table><thead><tr><th>Student</th><th>Marks scored</th><th>Level</th><th>Assessor</th><th>Date</th></tr></thead><tbody>
+    ${rows.slice().sort((a,b)=>(b.s?.overall??-1)-(a.s?.overall??-1)).map(x=>`<tr ${x.e?`data-open="${esc(x.r.reg)}" tabindex="0"`:""}>
+      <td class="name"><b>${esc(x.r.name)}</b><small>${esc(x.r.reg)}</small></td>
+      <td>${x.s?`<div class="scorecell">${bar(x.s.overall)}<b>${marks(x.s.got,x.s.max)}</b><span class="muted pc">${fp(x.s.overall)}</span></div>`:`<span class="muted">–</span>`}</td>
+      <td>${pill(x.s?bandOf(x.s.overall):"none")}</td>
+      <td>${x.e?esc(ASSESSORS[x.e.assessor]||x.e.assessor||"–"):"–"}</td>
+      <td>${x.e?esc(x.e.date||"–"):"–"}</td></tr>`).join("")}
+    </tbody></table></div></section>`;
+  const heat = `<section><div class="sec-h"><h2>Section results by student</h2><small>Marks scored / marks possible. Not applicable items are excluded.</small></div>
+    <div class="panel scroll"><table class="heat"><thead><tr><th>Student</th>${SECTIONS.map(s=>`<th>${esc(SHORT[s.id])}</th>`).join("")}</tr></thead><tbody>
+    ${rows.map(x=>`<tr><td>${esc(x.r.name)}</td>${SECTIONS.map(sec=>{const m=x.s?x.s.secs.find(z=>z.id===sec.id):null; const sc=m?m.score:null; const b=bandOf(sc); return `<td><span class="hc ${b}" title="${sc==null?"":fp(sc)}">${m?marks(m.got,m.max):"–"}</span></td>`;}).join("")}</tr>`).join("")}
+    </tbody></table></div>
+    <div class="legend"><span style="--c:var(--poor)">Poor (below 50%)</span><span style="--c:var(--good)">Good (50% to 83.2%)</span><span style="--c:var(--vg)">Very Good (83.3% and above)</span></div></section>`;
+  const coh = `<section><div class="sec-h"><h2>Cohort average by section</h2><small>Average % of marks possible</small></div>
+    <div class="panel cohort">${secAvg.map(x=>`<div class="crow"><span>${esc(SHORT[x.sec.id])}</span>${bar(x.avg)}<span>${fp(x.avg)}</span></div>`).join("")}</div></section>`;
+  return stats + empty + table + distSection() + heat + coh;
+}
+
+function entryLabel(e){ return `${ASSESSORS[e.assessor]||e.assessor||"Assessor"} · ${e.date||"no date"}`; }
+
+function reportHTML(e){
+  const s = summarize(e);
+  const name = e.name || rosterName(e.reg) || e.reg;
+  const total = s.counts.poor+s.counts.good+s.counts.very_good;
+  const seg = b => total ? (s.counts[b]/total*100) : 0;
+  const strengths=[], weak=[];
+  SECTIONS.forEach(sec=>sec.items.forEach((t,i)=>{ const b=e.r[sec.id+"_"+String(i+1).padStart(2,"0")]; if(b==="very_good")strengths.push(t); if(b==="poor")weak.push(t); }));
+  const lvl = bandOf(s.overall);
+  return `<article class="sheet" id="sheet">
+    <div class="lh"><div class="addr"><b>Manor House Agricultural Centre</b>P.O Box Private Bag, Kitale (30200)<br>+254 722 744 927 / +254 731 483 793<br>mhac@africaonline.co.ke</div><img src="data:image/png;base64,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" alt=""></div>
+    <div><p class="rt">Attachment assessment report</p><h1>${esc(name)}</h1>
+      <dl class="meta">
+        <div><dt>Admission No.</dt><dd>${esc(e.reg)}</dd></div>
+        <div><dt>Organization</dt><dd>${esc(e.org||"–")}</dd></div>
+        <div><dt>Place of attachment</dt><dd>${esc(e.place||"–")}</dd></div>
+        <div><dt>Community / village</dt><dd>${esc(e.village||"–")}</dd></div>
+        <div><dt>Assessed by</dt><dd>${esc(ASSESSORS[e.assessor]||e.assessor||"–")}</dd></div>
+        <div><dt>Date of assessment</dt><dd>${esc(e.date||"–")}</dd></div>
+      </dl></div>
+    <section><h2>Overall result</h2>
+      <div class="overall"><div class="big">${s.got}<small> / ${s.max}</small></div>
+      <div><div style="margin-bottom:8px">${pill(lvl)} <span class="muted" style="margin-left:6px">${fp(s.overall)} of marks possible</span></div>
+        <div class="stack" role="img" aria-label="Share of items rated Poor, Good and Very Good"><i class="f-poor" style="width:${seg("poor")}%"></i><i class="f-good" style="width:${seg("good")}%"></i><i class="f-very_good" style="width:${seg("very_good")}%"></i></div>
+        <div class="sub"><span><b>${s.counts.very_good}</b> Very Good</span><span><b>${s.counts.good}</b> Good</span><span><b>${s.counts.poor}</b> Poor</span><span><b>${s.counts.na}</b> Not applicable (excluded from the total)</span></div></div></div>
+    </section>
+    <section><h2>Results by section</h2>${SECTIONS.map(sec=>{const m=s.secs.find(z=>z.id===sec.id); return `<div class="secrow"><span>${esc(sec.title)}</span>${bar(m.score)}<b>${marks(m.got,m.max)}</b></div>`;}).join("")}
+      <div class="legend"><span style="--c:var(--poor)">Poor</span><span style="--c:var(--good)">Good</span><span style="--c:var(--vg)">Very Good</span><span style="--c:var(--na)">Ticks mark 50% and 83.3%</span></div></section>
+    ${cohortBlock(e,s)}
+    <div class="two">
+      <section><h2>Strengths</h2>${strengths.length?`<ul class="list s">${strengths.slice(0,8).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>${strengths.length>8?`<p class="muted">and ${strengths.length-8} more rated Very Good</p>`:""}`:`<p class="muted">No item rated Very Good yet.</p>`}</section>
+      <section><h2>Needs attention</h2>${weak.length?`<ul class="list w">${weak.slice(0,8).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>${weak.length>8?`<p class="muted">and ${weak.length-8} more rated Poor</p>`:""}`:`<p class="muted">No item rated Poor.</p>`}</section>
+    </div>
+    <section><h2>Item ratings</h2>${SECTIONS.map(sec=>`<details class="dt"><summary><span>${esc(sec.title)}</span><span class="muted">${(m=>marks(m.got,m.max))(s.secs.find(z=>z.id===sec.id))}</span></summary><div class="items">${sec.items.map((t,i)=>{const b=e.r[sec.id+"_"+String(i+1).padStart(2,"0")]||"na"; return `<div class="item"><span>${i+1}. ${esc(t)}</span><span>${pill(b)} <small class="muted" style="margin-left:4px">${PTS[b]?PTS[b]+" / "+MAXPT:"excluded"}</small></span></div>`;}).join("")}</div></details>`).join("")}</section>
+    <div class="two">
+      <section><h2>Major challenges faced</h2>${(e.challenges&&e.challenges.length)?e.challenges.map((c,i)=>`<p class="note"><small>Challenge ${i+1}</small>${esc(c)}</p>`).join(""):`<p class="muted">None recorded.</p>`}</section>
+      <section><h2>Supervisor's comments</h2>${(e.comments&&e.comments.length)?e.comments.map((c,i)=>`<p class="note"><small>Comment ${i+1}</small>${esc(c)}</p>`).join(""):`<p class="muted">None recorded.</p>`}</section>
+    </div>
+    <div class="sign"><span>Supervisor: <b>${esc(e.supName||"–")}</b></span><span>Designation: <b>${esc(e.supDesig||"–")}</b></span><span>Date: <b>${esc(e.supDate||"–")}</b></span></div>
+  </article>`;
+}
+
+
+function cohortBlock(e,s){
+  const vals=valuesFor("overall"); if(vals.length<2||s.overall==null) return "";
+  const below=vals.filter(v=>v<s.overall-1e-9).length, same=vals.filter(v=>Math.abs(v-s.overall)<=1e-9).length-1, mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const diff=s.overall-mean;
+  return `<section><h2>Position in the class</h2>${distChart(vals,s.overall)}${distLegend(true)}<div class="sub"><span>Above <b>${below}</b> of <b>${vals.length-1}</b> classmates${same>0?` (level with ${same})`:""}</span><span>Class average: <b>${fp(mean)}</b></span><span>This student is <b>${fmt(Math.abs(diff))}</b> percentage points ${diff>=0?"above":"below"} the average</span></div></section>`;
+}
+
+function viewReport(){
+  const opts = ROSTER.map(r=>`<option value="${esc(r.reg)}" ${r.reg===state.sel?"selected":""}>${esc(r.name)} (${esc(r.reg)})${latestFor(r.reg)?"":" – not assessed"}</option>`).join("");
+  const list = state.entries.filter(e=>e.reg===state.sel).sort((a,b)=>dateKey(b).localeCompare(dateKey(a)));
+  let e = list.find(x=>x.id===state.entryId) || list[0];
+  const chips = list.length>1 ? `<div class="chips" role="group" aria-label="Entries for this student">${list.map(x=>`<button class="chip" data-entry="${esc(x.id)}" aria-pressed="${x===e}">${esc(entryLabel(x))}</button>`).join("")}</div>` : "";
+  const head = `<div class="toolbar"><label for="stu" class="muted">Student</label><select id="stu">${opts}</select>${e?`<button class="btn ghost" id="dl">Download report</button>`:""}</div>${chips}`;
+  const body = e ? reportHTML(e) : `<div class="panel empty"><h3>${esc(rosterName(state.sel)||"Select a student")}</h3><p>This student has not been assessed yet. Their report appears here as soon as an entry is received.</p><button class="btn" data-tab="import">Data source</button></div>`;
+  return head + body;
+}
+
+function viewImport(){
+  const m=state.meta||{}; const rows=state.entries.slice().sort((a,b)=>dateKey(b).localeCompare(dateKey(a)));
+  const when=m.generated_at?new Date(m.generated_at).toLocaleString():"never";
+  return `<section class="panel imp"><div><h2 style="font-size:20px">Data source</h2><p class="muted" style="margin:4px 0 0">This dashboard reads the files written by the KoboToolbox pipeline. Run it again, or schedule it, to refresh.</p></div>
+    <dl class="meta"><div><dt>Form</dt><dd>${esc(m.form_name||"–")}</dd></div><div><dt>Deployed version</dt><dd>${esc(m.deployed_version_id||"–")}</dd></div><div><dt>Last refreshed</dt><dd>${esc(when)}</dd></div><div><dt>Entries</dt><dd>${state.entries.length}</dd></div></dl>
+    <p class="muted" style="margin:0">Refresh command: <code>python pipeline/kobo_pipeline.py</code></p></section>
+    <section><div class="sec-h"><h2>Entries received</h2><small>${rows.length} total</small></div>
+    <div class="panel scroll"><table><thead><tr><th>Student</th><th>Assessor</th><th>Date</th><th>Organization</th></tr></thead><tbody>
+    ${rows.length?rows.map(e=>`<tr><td class="name"><b>${esc(e.name||rosterName(e.reg))}</b><small>${esc(e.reg)}</small></td><td>${esc(ASSESSORS[e.assessor]||e.assessor||"–")}</td><td>${esc(e.date||"–")}</td><td>${esc(e.org||"–")}</td></tr>`).join(""):`<tr><td colspan="4" class="muted" style="text-align:center;padding:22px">Nothing here yet.</td></tr>`}
+    </tbody></table></div></section>`;
+}
+
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===state.tab));
+  const app = document.getElementById("app");
+  app.innerHTML = state.tab==="overview" ? viewOverview() : state.tab==="report" ? viewReport() : viewImport();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async ev=>{
+  const t = ev.target.closest("[data-tab],[data-open],[data-entry],#dl"); if(!t) return;
+  if(t.dataset.tab){ state.tab=t.dataset.tab; if(state.tab==="report"&&!state.sel) state.sel=(state.entries[0]||{}).reg||ROSTER[0].reg; render(); window.scrollTo(0,0); }
+  else if(t.dataset.open){ state.sel=t.dataset.open; state.entryId=null; state.tab="report"; render(); window.scrollTo(0,0); }
+  else if(t.dataset.entry){ state.entryId=t.dataset.entry; render(); }
+  else if(t.id==="dl"){
+    const sheet=document.getElementById("sheet"); if(!sheet) return;
+    const css=document.querySelector("style").textContent;
+    const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(rosterName(state.sel)||"Report")} – Assessment report</title><style>${css} body{padding:24px} details{display:block}</style></head><body><div class="wrap">${sheet.outerHTML}</div></body></html>`.replace(/<details class="dt"/g,'<details class="dt" open');
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([html],{type:"text/html"})); a.download=`${state.sel.replace(/[^A-Za-z0-9]/g,"-")}-assessment-report.html`; document.body.appendChild(a); a.click(); a.remove();
+  }
+});
+document.addEventListener("keydown", ev=>{ if(ev.key==="Enter"){ const t=ev.target.closest&&ev.target.closest("tr[data-open]"); if(t) t.click(); }});
+document.addEventListener("change", ev=>{
+  if(ev.target.id==="dsec"){ state.dsec=ev.target.value; render(); }
+  if(ev.target.id==="stu"){ state.sel=ev.target.value; state.entryId=null; render(); }
+});
+
+/* ---------- boot ---------- */
+function applyData(d){
+  state.meta=d.meta||{};
+  state.entries=(d.entries||[]).map(e=>Object.assign({},e));
+  if(Array.isArray(state.meta.roster) && state.meta.roster.length) ROSTER = state.meta.roster;
+  else if(!ROSTER.length){ const seen={}; state.entries.forEach(e=>{ if(e.reg && !seen[e.reg]) seen[e.reg]={reg:e.reg,name:e.name||""}; }); ROSTER=Object.values(seen).sort((a,b)=>a.reg.localeCompare(b.reg)); }
+  state.loaded=true; render();
+}
+
+/* Encrypted mode (public hosting): data/entries.enc.json is AES-256-GCM encrypted; the key is derived
+   in the browser from the passphrase (PBKDF2-SHA256). Nothing readable is ever published. */
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decryptPackage(pkg, pass){
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({name:"PBKDF2", salt:b64(pkg.salt), iterations:pkg.iter, hash:"SHA-256"}, km, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(pkg.iv)}, key, b64(pkg.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function fetchPackage(){
+  const r = await fetch("data/entries.enc.json", {cache:"no-store"});
+  if(!r.ok) return null;
+  return r.json();
+}
+function lockScreen(msg){
+  document.getElementById("app").innerHTML = `<section class="panel" style="max-width:460px;margin:40px auto;text-align:center">
+    <h2 style="font-size:22px;margin:0 0 6px">Protected dashboard</h2>
+    <p class="muted" style="margin:0 0 14px">Enter the access passphrase to view the assessment data.</p>
+    <input id="pp" type="password" autocomplete="current-password" placeholder="Passphrase" style="width:100%;padding:10px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)">
+    <p id="ppmsg" style="color:var(--poor);min-height:20px;margin:8px 0">${esc(msg||"")}</p>
+    <button id="ppbtn" style="padding:10px 22px;font-size:16px;border:0;border-radius:8px;background:var(--brand);color:#fff;cursor:pointer">Unlock</button>
+  </section>`;
+  const go = async () => {
+    const pass = document.getElementById("pp").value;
+    if(!pass) return;
+    document.getElementById("ppmsg").textContent = "Unlocking...";
+    const ok = await unlock(pass);
+    if(!ok) lockScreen("Wrong passphrase. Please try again.");
+  };
+  document.getElementById("ppbtn").onclick = go;
+  document.getElementById("pp").addEventListener("keydown", e => { if(e.key==="Enter") go(); });
+  document.getElementById("pp").focus();
+}
+async function unlock(pass){
+  try{
+    const pkg = await fetchPackage();
+    if(!pkg) return false;
+    const d = await decryptPackage(pkg, pass);
+    try{ sessionStorage.setItem("mhac_pp", pass); }catch(e){}
+    applyData(d);
+    return true;
+  }catch(e){ return false; }
+}
+async function refreshEncrypted(){
+  let pass=null; try{ pass=sessionStorage.getItem("mhac_pp"); }catch(e){}
+  if(!pass) return;
+  try{
+    const pkg = await fetchPackage(); if(!pkg) return;
+    const d = await decryptPackage(pkg, pass);
+    if((d.meta||{}).generated_at !== (state.meta||{}).generated_at) applyData(d);
+  }catch(e){}
+}
+async function bootEncrypted(){
+  let pass=null; try{ pass=sessionStorage.getItem("mhac_pp"); }catch(e){}
+  if(pass && await unlock(pass)) return;
+  const pkg = await fetchPackage().catch(()=>null);
+  if(pkg) lockScreen();
+}
+
+render();
+const hasPlain = window.ASSESSMENT_DATA && ((window.ASSESSMENT_DATA.entries||[]).length || (window.ASSESSMENT_DATA.meta||{}).generated_at);
+if(hasPlain){
+  applyData(window.ASSESSMENT_DATA);
+  if(location.protocol.indexOf("http")===0){
+    setInterval(async()=>{ try{ const r=await fetch("data/entries.json",{cache:"no-store"}); if(!r.ok) return; const d=await r.json(); if((d.meta||{}).generated_at!==(state.meta||{}).generated_at) applyData(d); }catch(e){} }, 60000);
+  }
+} else if(location.protocol.indexOf("http")===0){
+  bootEncrypted();
+  setInterval(refreshEncrypted, 60000);
+}
+</script>
+</body></html>

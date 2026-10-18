@@ -1,0 +1,65 @@
+name: Refresh and deploy encrypted dashboard
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch Kobo data
+        run: python pipeline/kobo_pipeline.py
+        env:
+          KOBO_URL: ${{ secrets.KOBO_URL }}
+          KOBO_API_TOKEN: ${{ secrets.KOBO_API_TOKEN }}
+          KOBO_FORM_NAME: ${{ secrets.KOBO_FORM_NAME }}
+          KOBO_ASSET_UID: ${{ secrets.KOBO_ASSET_UID }}
+          KOBO_ONLY_LATEST_VERSION: ${{ secrets.KOBO_ONLY_LATEST_VERSION }}
+          ROSTER_CSV: ${{ secrets.ROSTER_CSV }}
+
+      - name: Encrypt data for publishing
+        run: python pipeline/encrypt_site.py
+        env:
+          DASHBOARD_PASSPHRASE: ${{ secrets.DASHBOARD_PASSPHRASE }}
+
+      - name: Safety check - no readable data in the public folder
+        run: |
+          ls -la site/data
+          test -f site/data/entries.enc.json
+          test ! -f site/data/entries.json
+          test ! -f site/data/entries_flat.csv
+          if grep -q '"entries"' site/data/entries.js; then echo "Plaintext found in entries.js"; exit 1; fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

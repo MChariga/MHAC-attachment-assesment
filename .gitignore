@@ -1,0 +1,13 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# personal data: never commit
+roster.csv
+site/
+dashboard/data/entries.json
+dashboard/data/entries.js
+dashboard/data/entries_flat.csv
+form/*.xlsx
